@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Controle Financeiro</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap">
+    <style>
+        :root {
+            --bg: #0F172A;
+            --card-bg: #1E293B;
+            --primary: #8B5CF6;
+            --primary-hover: #A78BFA;
+            --secondary: #3B82F6;
+            --text-main: #F8FAFC;
+            --text-dim: #94A3B8;
+            --verde: #10B981;
+            --vermelho: #EF4444;
+            --laranja: #F59E0B;
+        }
+
+        * { box-sizing: border-box; transition: all 0.2s ease; }
+        
+        body { 
+            margin: 0; 
+            font-family: 'Inter', sans-serif; 
+            background: var(--bg); 
+            color: var(--text-main);
+            line-height: 1.5;
+            overflow-x: hidden;
+        }
+
+        header {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem;
+            text-align: center;
+            border-bottom: 1px solid #334155;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 1rem; }
+
+        .topbar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            background: var(--card-bg);
+            padding: 1rem;
+            border-radius: 16px;
+            border: 1px solid #334155;
+        }
+
+        select, input {
+            background: #0F172A;
+            border: 1px solid #334155;
+            color: white;
+            padding: 0.6rem;
+            border-radius: 8px;
+            outline: none;
+            font-size: 0.9rem;
+        }
+
+        select:focus, input:focus { border-color: var(--primary); }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn:hover { background: var(--primary-hover); transform: translateY(-1px); }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #475569;
+            color: var(--text-dim);
+            padding: 0.5rem 0.8rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+            gap: 1.5rem; 
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 1.2rem;
+            border-radius: 16px;
+            border: 1px solid #334155;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        h2 { 
+            color: var(--primary); 
+            margin: 0 0 1.2rem; 
+            font-size: 1.1rem; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between;
+        }
+
+        .row { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 0.8rem; 
+            gap: 10px;
+        }
+
+        .list-row { 
+            display: flex; 
+            gap: 0.4rem; 
+            margin-bottom: 0.6rem; 
+            align-items: center;
+            width: 100%;
+        }
+
+        .input-text { flex: 2; min-width: 0; }
+        .input-num { width: 90px !important; text-align: right; flex-shrink: 0; }
+
+        .btn-action {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid transparent;
+            flex-shrink: 0;
+            font-size: 0.8rem;
+        }
+
+        .delete { background: #ef444422; color: var(--vermelho); border-color: #ef444444; }
+        .delete:hover { background: var(--vermelho); color: white; }
+
+        .check-btn { background: #334155; color: var(--text-dim); border-color: #475569; }
+        .check-btn.active { background: var(--verde); color: white; border-color: var(--verde); }
+
+        .confirmed-row {
+            color: var(--verde) !important;
+            font-weight: 600;
+        }
+        
+        .list-row.confirmed .input-text, 
+        .list-row.confirmed .input-num { 
+            color: var(--verde); 
+            border-color: var(--verde);
+            opacity: 0.8;
+        }
+
+        .resumo { background: linear-gradient(135deg, #6D28D9 0%, #4C1D95 100%); border: none; }
+        .positivo { color: var(--verde); font-weight: bold; }
+        .negativo { color: var(--vermelho); font-weight: bold; }
+        .hidden { display: none; }
+
+        hr { border: 0; border-top: 1px solid #334155; margin: 1rem 0; }
+
+        .chart-container { position: relative; height: 250px; width: 100%; }
+        
+        .legend-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid #334155;
+        }
+
+        /* Tabela Streaming */
+        .streaming-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .streaming-table th, .streaming-table td {
+            text-align: left;
+            padding: 10px;
+            border-bottom: 1px solid #334155;
+            font-size: 0.85rem;
+        }
+        .streaming-table th { color: var(--text-dim); font-weight: 400; }
+        .streaming-table input { width: 100%; padding: 5px; }
+
+        .person-card {
+            background: #2D3748;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--secondary);
+        }
+
+        .person-name { font-weight: 700; color: var(--secondary); font-size: 1.1rem; margin-bottom: 8px; display: block; }
+        .person-stream-list { font-size: 0.85rem; color: var(--text-dim); margin: 0; padding: 0; list-style: none; }
+        .person-stream-item { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .person-total { border-top: 1px solid #4A5568; margin-top: 8px; padding-top: 8px; display: flex; justify-content: space-between; font-weight: 600; color: var(--text-main); }
+
+        @media(max-width: 600px) {
+            .grid { grid-template-columns: 1fr; }
+            .topbar { flex-direction: column; align-items: stretch; }
+            .input-num { width: 80px !important; }
+            .streaming-table { display: block; overflow-x: auto; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div style="font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px;">
+        <span style="color:var(--primary)">💰</span> Controle Financeiro
+    </div>
+</header>
+
+<div class="container">
+    <div class="topbar">
+        <div style="display:flex; gap:1rem; align-items:center;">
+            <select id="mes"></select>
+            <div style="font-size: 0.9rem;">Saldo Real: <span id="saldoMesTop" class="positivo">R$ 0,00</span></div>
+        </div>
+        <div style="display:flex; gap:0.5rem; flex-wrap: wrap;">
+            <button class="btn" id="openCards">💳 Cartões</button>
+            <button class="btn" id="openStreaming" style="background:var(--secondary)">🎬 Streaming</button>
+            <button class="btn-outline" id="viewAnual">📊 Anual</button>
+            <button class="btn-outline" id="exportJson">Backup</button>
+            <button class="btn-outline" id="importJson">Importar</button>
+            <button class="btn-outline" id="resetarLocal" style="color:var(--vermelho)">Limpar</button>
+        </div>
+    </div>
+
+    <main id="mainView">
+        <div class="grid">
+            <section class="card">
+                <h2>Vencimentos <span>💵</span></h2>
+                <div class="row">Salário Base <input class="input-num" type="number" id="salarioBase" step="0.01"></div>
+                <div class="row">Salário extra <input class="input-num" type="number" id="salarioMao" step="0.01"></div>
+                <div class="row">V. Passagem <input class="input-num" type="number" id="passagem" step="0.01"></div>
+                <div class="row">Insalubridade <input class="input-num" type="number" id="insalubridade" step="0.01"></div>
+                <div class="row">Desconto INSS <input class="input-num" type="number" id="inss" step="0.01" style="color:var(--vermelho)"></div>
+                <div class="row">13º Salário <input class="input-num" type="number" id="decimo" step="0.01"></div>
+                <div class="row">Férias <input class="input-num" type="number" id="ferias" step="0.01"></div>
+                <hr>
+                <div class="row"><span>Bruto Total</span><span id="totalVencimentos">0.00</span></div>
+                <div class="row"><strong style="color:var(--verde)">Líquido</strong><strong id="valorLiquido">0.00</strong></div>
+            </section>
+
+            <section class="card">
+                <h2>Outras Receitas <button class="btn-outline" id="addReceita">+</button></h2>
+                <div id="listaReceitas"></div>
+            </section>
+
+            <section class="card">
+                <h2>Despesas Fixas <button class="btn-outline" id="addDespesa">+</button></h2>
+                <div id="listaDespesas"></div>
+            </section>
+
+            <section class="card">
+                <h2>Despesas Variáveis <button class="btn-outline" id="addDespesaVariavel">+</button></h2>
+                <div id="listaDespesasVariaveis"></div>
+            </section>
+
+            <section class="card">
+                <h2>Faturas <span>💳</span></h2>
+                <div style="display:flex; flex-direction:column; gap:0.8rem">
+                    <div class="row">
+                        <div style="display:flex; align-items:center; gap:8px">
+                            <button class="btn-action check-btn" id="checkNubank" title="Confirmar Pagamento">✅</button>
+                            <span id="lblNubank">Nubank</span>
+                        </div>
+                        <span id="totalNubank">0.00</span>
+                    </div>
+                    <div class="row">
+                        <div style="display:flex; align-items:center; gap:8px">
+                            <button class="btn-action check-btn" id="checkSantander" title="Confirmar Pagamento">✅</button>
+                            <span id="lblSantander">Santander</span>
+                        </div>
+                        <span id="totalSantander">0.00</span>
+                    </div>
+                    <div class="row">
+                        <div style="display:flex; align-items:center; gap:8px">
+                            <button class="btn-action check-btn" id="checkMercado" title="Confirmar Pagamento">✅</button>
+                            <span id="lblMercado">Mercado Pago</span>
+                        </div>
+                        <span id="totalMercado">0.00</span>
+                    </div>
+                </div>
+                <hr>
+                <h2>Investimentos <button class="btn-outline" id="addInvestimento">+</button></h2>
+                <div id="listaInvestimentos"></div>
+            </section>
+
+            <section class="card">
+                <h2>Uso da Renda Confirmada <span>🥧</span></h2>
+                <div class="chart-container">
+                    <canvas id="chartPizza"></canvas>
+                </div>
+                <div id="pizzaLegend" style="font-size: 0.85rem; margin-top: 1rem;"></div>
+            </section>
+
+            <section class="card resumo">
+                <h2 style="color:white; border-bottom:1px solid #ffffff33; padding-bottom:10px">Resumo</h2>
+                <p class="row"><span>Renda Confirmada:</span><span id="resumoRenda">0.00</span></p>
+                <p class="row"><span>Gastos Confirmados:</span><span id="resumoGastos">0.00</span></p>
+                <div style="background:#00000033; padding:1rem; border-radius:12px; margin-top:1rem">
+                    <p class="row" style="margin:0">
+                        <strong>Saldo Real:</strong>
+                        <strong id="resultadoFinal" style="font-size:1.4rem">0.00</strong>
+                    </p>
+                </div>
+                <p style="font-size: 0.75rem; opacity: 0.8; margin-top: 10px; text-align: center;">
+                    * ✅ Itens confirmados afetam o saldo real.
+                </p>
+            </section>
+        </div>
+    </main>
+
+    <main id="cardsView" class="hidden">
+        <button class="btn-outline" id="backDashboard" style="margin-bottom:1rem">← Voltar</button>
+        <div class="grid">
+            <section class="card">
+                <input type="text" id="titleNubank" class="input-title" value="Nubank" style="background:transparent; border:none; color:var(--primary); font-size:1.1rem; font-weight:700; margin-bottom:1rem">
+                <button class="btn-outline" id="addNubank">+</button>
+                <div id="nubankList"></div>
+                <hr>
+                <div class="row"><strong>Subtotal:</strong><strong id="nubankTotal">0.00</strong></div>
+            </section>
+            <section class="card">
+                <input type="text" id="titleSantander" class="input-title" value="Santander" style="background:transparent; border:none; color:var(--primary); font-size:1.1rem; font-weight:700; margin-bottom:1rem">
+                <button class="btn-outline" id="addSantander">+</button>
+                <div id="santanderList"></div>
+                <hr>
+                <div class="row"><strong>Subtotal:</strong><strong id="santanderTotal">0.00</strong></div>
+            </section>
+            <section class="card">
+                <input type="text" id="titleMercado" class="input-title" value="Mercado Pago" style="background:transparent; border:none; color:var(--primary); font-size:1.1rem; font-weight:700; margin-bottom:1rem">
+                <button class="btn-outline" id="addMercado">+</button>
+                <div id="mercadoList"></div>
+                <hr>
+                <div class="row"><strong>Subtotal:</strong><strong id="mercadoTotal">0.00</strong></div>
+            </section>
+        </div>
+    </main>
+
+    <main id="streamingView" class="hidden">
+        <button class="btn-outline" id="backFromStreaming" style="margin-bottom:1rem">← Voltar</button>
+        <div class="grid" style="grid-template-columns: 2fr 1fr;">
+            <section class="card">
+                <h2>Gestão de Streaming <button class="btn-outline" id="addStreaming">+</button></h2>
+                <table class="streaming-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 20%;">Nome</th>
+                            <th style="width: 10%;">T. Perfis</th>
+                            <th style="width: 10%;">U. Perfis</th>
+                            <th style="width: 15%;">Valor Total</th>
+                            <th style="width: 40%;">Pessoas (sep. por vírgula)</th>
+                            <th style="width: 5%;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="streamingBody"></tbody>
+                </table>
+                <div style="margin-top: 25px; padding-top: 15px; border-top: 2px solid #334155; display: flex; flex-direction: column; gap: 8px;">
+                    <div class="row">
+                        <span style="color: var(--text-dim)">Total Mensal (Valor Cheio):</span>
+                        <strong id="totalStreamingCheio" style="font-size: 1.1rem">R$ 0,00</strong>
+                    </div>
+                    <div class="row">
+                        <span style="color: var(--verde)">Total Mensal (Valor Rateado):</span>
+                        <strong id="totalStreamingRateado" style="font-size: 1.2rem; color: var(--verde)">R$ 0,00</strong>
+                    </div>
+                </div>
+            </section>
+            <section class="card">
+                <h2>Resumo por Pessoa 👤</h2>
+                <div id="listaPessoasStreaming">
+                    <p style="color: var(--text-dim); font-size: 0.9rem; text-align: center;">Preencha a coluna "Pessoas" para ver o resumo aqui.</p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <main id="anualView" class="hidden">
+        <button class="btn-outline" id="backFromAnual" style="margin-bottom:1rem">← Voltar</button>
+        <div class="card">
+            <h2>Desempenho Anual</h2>
+            <canvas id="chartAnual"></canvas>
+        </div>
+    </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const monthNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    const $ = id => document.getElementById(id);
+    let pizzaChartInstance = null;
+    
+    let cardStatus = { nubank: false, santander: false, mercado: false };
+
+    const selectMes = $('mes');
+    monthNames.forEach((m, i) => {
+        const o = document.createElement('option');
+        o.value = i;
+        o.textContent = m;
+        selectMes.appendChild(o);
+    });
+
+    const toNum = v => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
+    const fmt = n => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    const keyForMonth = () => `finances_v4_${selectMes.value}`;
+
+    const defaultState = () => ({
+        renda: { salarioBase: 0, salarioMao: 0, passage: 0, insalubridade: 0, inss: 0, decimo: 0, ferias: 0 },
+        receitas: [],
+        despesas: [], 
+        despesasVariaveis: [], 
+        investimentos: [],
+        cardNames: { nubank: 'Nubank', santander: 'Santander', mercado: 'Mercado Pago' },
+        cartoes: { nubank: [], santander: [], mercado: [] },
+        cardStatus: { nubank: false, santander: false, mercado: false },
+        streaming: []
+    });
+
+    function collectState() {
+        return {
+            renda: {
+                salarioBase: toNum($('salarioBase').value),
+                salarioMao: toNum($('salarioMao').value),
+                passagem: toNum($('passagem').value),
+                insalubridade: toNum($('insalubridade').value),
+                inss: toNum($('inss').value),
+                decimo: toNum($('decimo').value),
+                ferias: toNum($('ferias').value)
+            },
+            receitas: collectList('listaReceitas'),
+            despesas: collectList('listaDespesas'),
+            despesasVariaveis: collectList('listaDespesasVariaveis'),
+            investimentos: collectList('listaInvestimentos'),
+            cardNames: {
+                nubank: $('titleNubank').value,
+                santander: $('titleSantander').value,
+                mercado: $('titleMercado').value
+            },
+            cartoes: {
+                nubank: collectList('nubankList', true),
+                santander: collectList('santanderList', true),
+                mercado: collectList('mercadoList', true)
+            },
+            cardStatus: cardStatus,
+            streaming: collectStreaming()
+        };
+    }
+
+    function collectList(id, ignoreDone = false) {
+        return Array.from($(id).querySelectorAll('.list-row')).map(r => ({
+            desc: r.querySelector('.input-text').value,
+            val: toNum(r.querySelector('.input-num').value),
+            done: ignoreDone ? false : r.classList.contains('confirmed')
+        }));
+    }
+
+    function collectStreaming() {
+        return Array.from($('streamingBody').querySelectorAll('tr')).map(tr => {
+            const inputs = tr.querySelectorAll('input');
+            return {
+                nome: inputs[0].value,
+                totPerfis: toNum(inputs[1].value),
+                usoPerfis: toNum(inputs[2].value),
+                valor: toNum(inputs[3].value),
+                pessoas: inputs[4].value
+            };
+        });
+    }
+
+    function applyState(s) {
+        if(!s) return;
+        $('salarioBase').value = s.renda.salarioBase || 0;
+        $('salarioMao').value = s.renda.salarioMao || 0;
+        $('passagem').value = s.renda.passagem || 0;
+        $('insalubridade').value = s.renda.insalubridade || 0;
+        $('inss').value = s.renda.inss || 0;
+        $('decimo').value = s.renda.decimo || 0;
+        $('ferias').value = s.renda.ferias || 0;
+
+        renderList('listaReceitas', s.receitas);
+        renderList('listaDespesas', s.despesas);
+        renderList('listaDespesasVariaveis', s.despesasVariaveis);
+        renderList('listaInvestimentos', s.investimentos);
+        
+        renderList('nubankList', s.cartoes.nubank, true);
+        renderList('santanderList', s.cartoes.santander, true);
+        renderList('mercadoList', s.cartoes.mercado, true);
+
+        const names = s.cardNames || { nubank: 'Nubank', santander: 'Santander', mercado: 'Mercado Pago' };
+        $('titleNubank').value = names.nubank;
+        $('lblNubank').textContent = names.nubank;
+        $('titleSantander').value = names.santander;
+        $('lblSantander').textContent = names.santander;
+        $('titleMercado').value = names.mercado;
+        $('lblMercado').textContent = names.mercado;
+
+        cardStatus = s.cardStatus || { nubank: false, santander: false, mercado: false };
+        updateCardChecks();
+        
+        // Streaming
+        $('streamingBody').innerHTML = '';
+        (s.streaming || []).forEach(st => addStreamingRow(st));
+
+        updateCalculations();
+    }
+
+    function updateCardChecks() {
+        const setCheck = (id, labelId, totalId, val) => {
+            const btn = $(id);
+            const lbl = $(labelId);
+            const tot = $(totalId);
+            if(val) {
+                btn.classList.add('active');
+                lbl.classList.add('confirmed-row');
+                tot.classList.add('confirmed-row');
+            } else {
+                btn.classList.remove('active');
+                lbl.classList.remove('confirmed-row');
+                tot.classList.remove('confirmed-row');
+            }
+        };
+        setCheck('checkNubank', 'lblNubank', 'totalNubank', cardStatus.nubank);
+        setCheck('checkSantander', 'lblSantander', 'totalSantander', cardStatus.santander);
+        setCheck('checkMercado', 'lblMercado', 'totalMercado', cardStatus.mercado);
+    }
+
+    function renderList(id, items, noCheck = false) {
+        const container = $(id);
+        container.innerHTML = '';
+        (items || []).forEach(it => addRow(id, it.desc, it.val, it.done, noCheck));
+    }
+
+    function addRow(containerId, desc = '', val = 0, done = false, noCheck = false) {
+        const div = document.createElement('div');
+        div.className = `list-row ${done ? 'confirmed' : ''}`;
+        
+        let checkHtml = `<button class="btn-action check-btn ${done ? 'active' : ''}" title="Confirmar">✅</button>`;
+        if(noCheck) checkHtml = '';
+
+        div.innerHTML = `
+            ${checkHtml}
+            <input type="text" class="input-text" placeholder="Desc" value="${desc}">
+            <input type="number" class="input-num" step="0.01" value="${val}">
+            <button class="btn-action delete" title="Excluir">✕</button>
+        `;
+        
+        if(!noCheck) {
+            const checkBtn = div.querySelector('.check-btn');
+            checkBtn.onclick = () => {
+                div.classList.toggle('confirmed');
+                checkBtn.classList.toggle('active');
+                saveAndSync();
+            };
+        }
+
+        div.querySelector('.delete').onclick = () => { div.remove(); saveAndSync(); };
+        div.querySelectorAll('input').forEach(i => i.oninput = saveAndSync);
+        
+        $(containerId).appendChild(div);
+    }
+
+    function addStreamingRow(data = {nome:'', totPerfis:1, usoPerfis:1, valor:0, pessoas: ''}) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><input type="text" value="${data.nome}" placeholder="Netflix..."></td>
+            <td><input type="number" value="${data.totPerfis}" min="1"></td>
+            <td><input type="number" value="${data.usoPerfis}" min="1"></td>
+            <td><input type="number" value="${data.valor}" step="0.01"></td>
+            <td><input type="text" value="${data.pessoas}" placeholder="João, Maria..."></td>
+            <td><button class="btn-action delete">✕</button></td>
+        `;
+        tr.querySelector('.delete').onclick = () => { tr.remove(); saveAndSync(); };
+        tr.querySelectorAll('input').forEach(i => i.oninput = saveAndSync);
+        $('streamingBody').appendChild(tr);
+        updateCalculations();
+    }
+
+    function updateCalculations() {
+        const state = collectState();
+        const r = state.renda;
+        const totalBruto = r.salarioBase + r.salarioMao + r.passagem + r.insalubridade + r.decimo + r.ferias;
+        const liquidoPrincipal = totalBruto - r.inss;
+
+        $('totalVencimentos').textContent = fmt(totalBruto);
+        $('valorLiquido').textContent = fmt(liquidoPrincipal);
+
+        const sumAll = arr => (arr || []).reduce((a, b) => a + b.val, 0);
+        const sumDone = arr => (arr || []).reduce((a, b) => a + (b.done ? b.val : 0), 0);
+
+        const nTotal = sumAll(state.cartoes.nubank);
+        const sTotal = sumAll(state.cartoes.santander);
+        const mTotal = sumAll(state.cartoes.mercado);
+
+        $('totalNubank').textContent = fmt(nTotal);
+        $('totalSantander').textContent = fmt(sTotal);
+        $('totalMercado').textContent = fmt(mTotal);
+        $('nubankTotal').textContent = fmt(nTotal);
+        $('santanderTotal').textContent = fmt(sTotal);
+        $('mercadoTotal').textContent = fmt(mTotal);
+
+        const receitasDone = sumDone(state.receitas);
+        const rendaConfirmada = liquidoPrincipal + receitasDone;
+
+        const fixasDone = sumDone(state.despesas);
+        const varDone = sumDone(state.despesasVariaveis);
+        const investDone = sumDone(state.investimentos);
+        
+        const cartoesDone = (cardStatus.nubank ? nTotal : 0) + 
+                            (cardStatus.santander ? sTotal : 0) + 
+                            (cardStatus.mercado ? mTotal : 0);
+
+        const gastosConfirmados = fixasDone + varDone + investDone + cartoesDone;
+        const saldoFinal = rendaConfirmada - gastosConfirmados;
+
+        $('resumoRenda').textContent = fmt(rendaConfirmada);
+        $('resumoGastos').textContent = fmt(gastosConfirmados);
+        
+        const elFinal = $('resultadoFinal');
+        elFinal.textContent = fmt(saldoFinal);
+        elFinal.className = saldoFinal >= 0 ? 'positivo' : 'negativo';
+        
+        $('saldoMesTop').textContent = fmt(saldoFinal);
+        $('saldoMesTop').className = saldoFinal >= 0 ? 'positivo' : 'negativo';
+
+        // Calc Streaming e Resumo por Pessoa
+        let stTotalCheio = 0;
+        let stTotalRateado = 0;
+        const mapaPessoas = {};
+
+        Array.from($('streamingBody').querySelectorAll('tr')).forEach(tr => {
+            const inputs = tr.querySelectorAll('input');
+            const servico = inputs[0].value;
+            const uso = toNum(inputs[2].value);
+            const val = toNum(inputs[3].value);
+            const pessoasRaw = inputs[4].value;
+            
+            const divVal = uso > 0 ? (val / uso) : 0;
+            stTotalCheio += val;
+            stTotalRateado += divVal;
+
+            if (pessoasRaw.trim()) {
+                const listaNomes = pessoasRaw.split(',').map(n => n.trim()).filter(n => n);
+                listaNomes.forEach(nome => {
+                    if (!mapaPessoas[nome]) mapaPessoas[nome] = { streams: [], total: 0 };
+                    mapaPessoas[nome].streams.push({ nome: servico, valor: divVal });
+                    mapaPessoas[nome].total += divVal;
+                });
+            }
+        });
+        
+        $('totalStreamingCheio').textContent = fmt(stTotalCheio);
+        $('totalStreamingRateado').textContent = fmt(stTotalRateado);
+
+        // Renderizar Cards de Pessoas
+        const containerPessoas = $('listaPessoasStreaming');
+        containerPessoas.innerHTML = '';
+        
+        const nomesOrdenados = Object.keys(mapaPessoas).sort();
+        if (nomesOrdenados.length === 0) {
+            containerPessoas.innerHTML = '<p style="color: var(--text-dim); font-size: 0.9rem; text-align: center;">Preencha a coluna "Pessoas" para ver o resumo aqui.</p>';
+        } else {
+            nomesOrdenados.forEach(nome => {
+                const dados = mapaPessoas[nome];
+                const card = document.createElement('div');
+                card.className = 'person-card';
+                
+                let listHtml = '';
+                dados.streams.forEach(s => {
+                    listHtml += `<li class="person-stream-item"><span>${s.nome || 'S/ nome'}</span> <span>${fmt(s.valor)}</span></li>`;
+                });
+
+                card.innerHTML = `
+                    <span class="person-name">${nome}</span>
+                    <ul class="person-stream-list">${listHtml}</ul>
+                    <div class="person-total"><span>Total</span> <span>${fmt(dados.total)}</span></div>
+                `;
+                containerPessoas.appendChild(card);
+            });
+        }
+
+        updatePizzaChart(fixasDone, (varDone + cartoesDone), investDone, saldoFinal, rendaConfirmada);
+    }
+
+    function updatePizzaChart(fixas, variaveis, invest, saldo, rendaTotal) {
+        const ctx = $('chartPizza').getContext('2d');
+        const legend = $('pizzaLegend');
+        
+        if (pizzaChartInstance) pizzaChartInstance.destroy();
+        
+        if(rendaTotal <= 0 && (fixas + variaveis + invest) <= 0) {
+            legend.innerHTML = '<p style="text-align:center; color:var(--text-dim)">Adicione receitas ou despesas confirmadas.</p>';
+            return;
+        }
+
+        let labels, data, colors;
+        
+        if (saldo > 0) {
+            labels = ['Saldo Real', 'Fixo', 'Variável', 'Investimento'];
+            data = [saldo, fixas, variaveis, invest];
+            colors = ['#10B981', '#EF4444', '#F59E0B', '#3B82F6'];
+        } else {
+            labels = ['Fixo', 'Variável', 'Investimento'];
+            data = [fixas, variaveis, invest];
+            colors = ['#EF4444', '#F59E0B', '#3B82F6'];
+        }
+
+        const divisor = saldo > 0 ? rendaTotal : (fixas + variaveis + invest);
+        
+        let legendHtml = '';
+        data.forEach((val, i) => {
+            const perc = divisor > 0 ? ((val / divisor) * 100).toFixed(1) : 0;
+            legendHtml += `
+                <div class="legend-item">
+                    <span><span style="color:${colors[i]}">●</span> ${labels[i]}</span> 
+                    <span>${perc}% (${fmt(val)})</span>
+                </div>
+            `;
+        });
+
+        legend.innerHTML = legendHtml + `
+            <div class="legend-item" style="border:none; margin-top:5px; opacity:0.8; font-size:0.75rem">
+                ${saldo > 0 ? '* Percentagens baseadas na Renda Confirmada' : '* Percentagens baseadas no Total de Gastos'}
+            </div>
+        `;
+
+        pizzaChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: colors,
+                    borderWidth: 0
+                }]
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                cutout: '75%',
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+
+    function saveAndSync() {
+        localStorage.setItem(keyForMonth(), JSON.stringify(collectState()));
+        updateCalculations();
+    }
+
+    $('checkNubank').onclick = () => { cardStatus.nubank = !cardStatus.nubank; updateCardChecks(); saveAndSync(); };
+    $('checkSantander').onclick = () => { cardStatus.santander = !cardStatus.santander; updateCardChecks(); saveAndSync(); };
+    $('checkMercado').onclick = () => { cardStatus.mercado = !cardStatus.mercado; updateCardChecks(); saveAndSync(); };
+
+    // Nav
+    const views = ['mainView', 'cardsView', 'streamingView', 'anualView'];
+    function showView(v) {
+        views.forEach(id => $(id).classList.add('hidden'));
+        $(v).classList.remove('hidden');
+        window.scrollTo(0,0);
+    }
+
+    $('openCards').onclick = () => showView('cardsView');
+    $('openStreaming').onclick = () => showView('streamingView');
+    $('backDashboard').onclick = () => showView('mainView');
+    $('backFromStreaming').onclick = () => showView('mainView');
+    $('backFromAnual').onclick = () => showView('mainView');
+
+    $('addReceita').onclick = () => addRow('listaReceitas');
+    $('addDespesa').onclick = () => addRow('listaDespesas');
+    $('addDespesaVariavel').onclick = () => addRow('listaDespesasVariaveis');
+    $('addInvestimento').onclick = () => addRow('listaInvestimentos');
+    $('addNubank').onclick = () => addRow('nubankList', '', 0, false, true);
+    $('addSantander').onclick = () => addRow('santanderList', '', 0, false, true);
+    $('addMercado').onclick = () => addRow('mercadoList', '', 0, false, true);
+    $('addStreaming').onclick = () => addStreamingRow();
+
+    $('viewAnual').onclick = () => {
+        showView('anualView');
+        const labels = monthNames;
+        const saldos = [];
+        for(let i=0; i<12; i++) {
+            const raw = localStorage.getItem(`finances_v4_${i}`);
+            if(!raw) { saldos.push(0); continue; }
+            const s = JSON.parse(raw);
+            const r = s.renda;
+            const liq = (r.salarioBase + (r.salarioMao||0) + (r.passagem||0) + (r.insalubridade||0) + (r.decimo||0) + (r.ferias||0)) - (r.inss||0);
+            const sumD = arr => (arr || []).reduce((a, b) => a + (b.done ? b.val : 0), 0);
+            const sumA = arr => (arr || []).reduce((a, b) => a + (b.val || 0), 0);
+            const rConf = liq + sumD(s.receitas);
+            const cs = s.cardStatus || {nubank:false, santander:false, mercado:false};
+            const gConf = sumD(s.despesas) + sumD(s.despesasVariaveis) + sumD(s.investimentos) + 
+                         (cs.nubank ? sumA(s.cartoes.nubank) : 0) + 
+                         (cs.santander ? sumA(s.cartoes.santander) : 0) + 
+                         (cs.mercado ? sumA(s.cartoes.mercado) : 0);
+            saldos.push(rConf - gConf);
+        }
+        const ctx = $('chartAnual').getContext('2d');
+        if(window.myChart) window.myChart.destroy();
+        window.myChart = new Chart(ctx, {
+            type: 'bar',
+            data: { labels, datasets: [{ label: 'Saldo Real', data: saldos, backgroundColor: saldos.map(v => v >= 0 ? '#10B981' : '#EF4444') }] }
+        });
+    };
+
+    $('exportJson').onclick = () => {
+        const all = {};
+        for(let i=0; i<12; i++){
+            const d = localStorage.getItem(`finances_v4_${i}`);
+            if(d) all[i] = JSON.parse(d);
+        }
+        const blob = new Blob([JSON.stringify(all)], {type: 'application/json'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'backup_financeiro.json';
+        a.click();
+    };
+
+    $('importJson').onclick = () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.onchange = e => {
+            const reader = new FileReader();
+            reader.onload = ev => {
+                const data = JSON.parse(ev.target.result);
+                Object.keys(data).forEach(k => localStorage.setItem(`finances_v4_${k}`, JSON.stringify(data[k])));
+                location.reload();
+            };
+            reader.readAsText(e.target.files[0]);
+        };
+        input.click();
+    };
+
+    $('resetarLocal').onclick = () => { if(confirm("Limpar dados deste mês?")) { localStorage.removeItem(keyForMonth()); applyState(defaultState()); } };
+
+    selectMes.onchange = () => {
+        const saved = localStorage.getItem(keyForMonth());
+        applyState(saved ? JSON.parse(saved) : defaultState());
+    };
+
+    window.onload = () => {
+        selectMes.value = new Date().getMonth();
+        const saved = localStorage.getItem(keyForMonth());
+        applyState(saved ? JSON.parse(saved) : defaultState());
+        document.querySelectorAll('main input').forEach(i => i.addEventListener('input', saveAndSync));
+    };
+</script>
+
+</body>
+</html>
